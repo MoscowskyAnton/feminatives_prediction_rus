@@ -1,0 +1,2 @@
+# feminatives_prediction_rus
+Предсказание феминативов профессий
