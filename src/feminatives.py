@@ -98,6 +98,7 @@ def main():
         #encoder_input_data[i,:,:] = to_categorical(np.array(seq), num_classes=vocab_size)
         encoder_input_data.append(seq)
     encoder_input_data = np.array(encoder_input_data)
+    #encoder_input_data = encoder_input_data.reshape((1,encoder_input_data.shape[0],encoder_input_data.shape[1]))
             
     for i, word in enumerate(decoder_words):
         seq = [char_to_index[char] for char in word]
@@ -105,6 +106,7 @@ def main():
         decoder_input_data.append(seq)
         #decoder_input_data[i,:,:] = to_categorical(np.array(seq), num_classes=vocab_size)
     decoder_input_data = np.array(decoder_input_data)
+    #decoder_input_data = decoder_input_data.reshape((1,decoder_input_data.shape[0],decoder_input_data.shape[1]))
     
     for i, word in enumerate(target_words):
         seq = [char_to_index[char] for char in word]
@@ -117,6 +119,7 @@ def main():
         #encoder_input_data_test[i,:,:] = to_categorical(np.array(seq), num_classes=vocab_size)
         encoder_input_data_test.append(seq)
     encoder_input_data_test = np.array(encoder_input_data_test)
+    #encoder_input_data_test = encoder_input_data_test.reshape((1,encoder_input_data_test.shape[0],encoder_input_data_test.shape[1]))
     
     print("Input encoder shape: {}".format(np.array(encoder_input_data).shape))
     print("Input decoder shape: {}".format(np.array(decoder_input_data).shape))
@@ -161,10 +164,11 @@ def main():
         
     '''
     # define the input ans process
-    #encoder_inputs = Input(shape=(1,))
+    
     #encoder_inputs = Input(shape=(None, 1))
     #encoder_inputs = Input(shape=(None, encoder_seq_length))
     encoder_inputs = Input(shape=(encoder_seq_length,))   
+    #encoder_inputs = Input(shape=(1,))
     
     embedding_layer = pretrained_embedding_layer(char_to_vec_map, char_to_index)
     
@@ -172,7 +176,7 @@ def main():
     encoder = Bidirectional(LSTM(units=latent_dim, return_state=True))
     #encoder1 = LSTM(latent_dim,return_sequences=True)
     #encoder = LSTM(latent_dim, return_state=True)
-    encoder_outputs, state_h_f, state_c_f, state_h_b, state_c_b = encoder(Dropout(0.25)(encoder1(embedding_layer(encoder_inputs))))
+    encoder_outputs, state_h_f, state_c_f, state_h_b, state_c_b = encoder(Dropout(0.5)(encoder1(embedding_layer(encoder_inputs))))
     # discard output, leave state only
     state_h = Concatenate()([state_h_f, state_h_b])
     state_c = Concatenate()([state_c_f, state_c_b])
@@ -180,9 +184,9 @@ def main():
     
     # decoder
     #decoder_inputs = Input(shape=(1))    
-    #decoder_inputs = Input(shape=(1,))    
     #decoder_inputs = Input(shape=(None, decoder_seq_length))    
     decoder_inputs = Input(shape=(decoder_seq_length,))
+    #decoder_inputs = Input(shape=(1,))
     
     decoder_lstm1 = LSTM(units=latent_dim * 2, return_sequences=True, return_state=True)
     decoder_lstm = LSTM(units=latent_dim * 2, return_sequences=True, return_state=True)
@@ -205,7 +209,7 @@ def main():
               epochs=epochs,
               shuffle = True,
               validation_split=validation_split,
-              callbacks = [plot_losses])
+              )#callbacks = [plot_losses])
     
     print(history.history.keys())
     '''
