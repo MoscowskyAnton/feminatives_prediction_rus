@@ -27,16 +27,20 @@ print('Loading data...')
 in_filename = '../data_embeddings/WaP_I_char_sequences.txt'
 raw_text = load_doc(in_filename)
 lines = raw_text.split('\n')
+print("Loaded {} lines of data".format(len(lines)))
 
 # integer encode sequences of characters
 chars = sorted(list(set(raw_text)))
 mapping = dict((c, i) for i, c in enumerate(chars))
+print(mapping)
 sequences = list()
 for line in lines:
+    #print(line)
     # integer encode line
-    if len(line) < maxlen+1 :
+    if len(line) != maxlen+1 :
         continue
     encoded_seq = [mapping[char] for char in line]
+    #print(encoded_seq)
     # store
     sequences.append(encoded_seq)
  
@@ -46,7 +50,7 @@ print('Vocabulary Size: %d' % vocab_size)
  
 # separate into input and output
 sequences = array(sequences)
-#print(sequences)
+print(sequences.shape)
 X, y = sequences[:,:-1], sequences[:,-1]
 #sequences = [to_categorical(x, num_classes=vocab_size) for x in X]
 #X = array(sequences)

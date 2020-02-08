@@ -40,7 +40,7 @@ def main():
         #print(w)
         for i in range(len_seq, len(w)):
             seq = w[i-len_seq:i+1]
-            print(seq)
+            #print(seq)
             sequences.append(seq)
 
 
