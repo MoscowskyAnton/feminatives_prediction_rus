@@ -20,7 +20,7 @@ def load_doc(filename):
 max_features = 20000
 # cut texts after this number of words
 # (among top max_features most common words)
-maxlen = 4
+maxlen = 3
 batch_size = 32
 
 print('Loading data...')
@@ -68,10 +68,10 @@ model.add(Embedding(vocab_size, 64, input_length=maxlen))
 model.add(Bidirectional(LSTM(64)))
 model.add(Dropout(0.5))
 #model.add(Dense(1, activation='sigmoid'))
-model.add(Dense(vocab_size, activation='softmax'))
+model.add(Dense(vocab_size, activation='sigmoid'))
 
 # try using different optimizers and different optimizer configs
-model.compile('adam', 'categorical_crossentropy', metrics=['accuracy'])
+model.compile('adam', 'binary_crossentropy', metrics=['accuracy'])
 
 print('Train...')
 model.fit(X, y,

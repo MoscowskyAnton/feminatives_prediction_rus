@@ -35,7 +35,7 @@ def main():
     
     # generate sequences
     sequences = []
-    len_seq = 4
+    len_seq = 3
     for w in tokens:    
         #print(w)
         for i in range(len_seq, len(w)):
