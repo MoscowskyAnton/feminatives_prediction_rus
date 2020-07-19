@@ -2,6 +2,7 @@
 Project: RNN model, that predict feminatives word by given male profession word (russian)
 Author: Moscowsky Anton moscowskyad@gmail.com
 Inspiration: https://blog.keras.io/a-ten-minute-introduction-to-sequence-to-sequence-learning-in-keras.html
+github: https://github.com/keras-team/keras/blob/master/examples/lstm_seq2seq.py
 Date created: 12.01.2020
 '''
 
@@ -27,15 +28,17 @@ def get_chars(words, characters, add_startend = False):
 def main():
     num_samples = -1
     batch_size = 32
-    epochs = 100
+    epochs = 50
     latent_dim = 512 #265 # units in LSTM
     validation_split = 0.01
     data_train = pd.read_csv('../data_professions/professions_train_agumented.csv')
     data_test = pd.read_csv('../data_professions/professions_train.csv')
+    data_real_test = pd.read_csv('../data_professions/professions_test.csv')
 
     input_words = data_train['male'].values[:num_samples].tolist()
     target_words = data_train['female'].values[:num_samples].tolist()
     test_words = data_test['male'].values.tolist()
+    real_test_words = data_real_test['male'].values.tolist()
 
     # Vectorize the data
     characters = set()    
@@ -44,6 +47,7 @@ def main():
     # adding a 'start char'    
     target_words, characters = get_chars(target_words, characters, True)
     test_words, characters = get_chars(test_words, characters)
+    real_test_words, characters = get_chars(real_test_words, characters)
     characters = sorted(list(characters))
     
     encoder_seq_length = max([len(txt) for txt in input_words+test_words])
@@ -62,6 +66,8 @@ def main():
     decoder_target_data = np.zeros((len(input_words),decoder_seq_length,num_tokens),dtype='float32')
     
     encoder_input_data_test = np.zeros((len(test_words),encoder_seq_length,num_tokens),dtype='float32')
+    
+    encoder_input_data_real_test = np.zeros((len(test_words),encoder_seq_length,num_tokens),dtype='float32')
     
     for i, (input_word,target_word) in enumerate(zip(input_words,target_words)):
         for t, char in enumerate(input_word):
@@ -89,6 +95,12 @@ def main():
             #encoder_input_data_test[i, t, token_index['\0']] = 1
         encoder_input_data_test[i, t+1:, token_index[' ']] = 1     
         
+    for i, real_test_word in enumerate(real_test_words):
+        for t, char in enumerate(real_test_word):
+            encoder_input_data_real_test[i, t, token_index[char]] = 1
+                
+        encoder_input_data_real_test[i, t+1:, token_index[' ']] = 1     
+    
     
     # define the input ans process
     encoder_inputs = Input(shape=(None, num_tokens))    
@@ -97,7 +109,9 @@ def main():
     encoder1 = LSTM(latent_dim,return_sequences=True)
     encoder = LSTM(latent_dim, return_state=True)
     #encoder_outputs, state_h_f, state_c_f, state_h_b, state_c_b = encoder(Dropout(0.25)(encoder1(encoder_inputs)))
-    encoder_outputs, state_h, state_c = encoder(Dropout(0.25)(encoder1(encoder_inputs)))
+    #encoder_outputs, state_h, state_c = encoder(Dropout(0.25)(encoder1(encoder_inputs)))
+    #encoder_outputs, state_h, state_c = encoder(encoder1(encoder_inputs))
+    encoder_outputs, state_h, state_c = encoder(encoder_inputs)
     # discard output, leave state only
     #state_h = Concatenate()([state_h_f, state_h_b])
     #state_c = Concatenate()([state_c_f, state_c_b])
@@ -110,7 +124,8 @@ def main():
     #decoder_lstm = LSTM(latent_dim * 2, return_sequences=True, return_state=True)
     decoder_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=True)
     decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True)
-    decoder_outputs, _, _ = decoder_lstm(decoder_lstm1(decoder_inputs, initial_state=encoder_states))
+    #decoder_outputs, _, _ = decoder_lstm(decoder_lstm1(decoder_inputs, initial_state=encoder_states))
+    decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
     decoder_dense = Dense(num_tokens, activation='softmax')
     decoder_outputs = decoder_dense(decoder_outputs)
     
@@ -163,7 +178,8 @@ def main():
     decoder_state_input_c = Input(shape=(latent_dim,))
     decoder_state_inputs = [decoder_state_input_h, decoder_state_input_c]
     #decoder_outputs, state_h_f, state_c_f, state_h_b, state_c_b = decoder_lstm(decoder_inputs, initial_state = decoder_state_inputs)
-    decoder_outputs, state_h, state_c = decoder_lstm(decoder_lstm1(decoder_inputs, initial_state = decoder_state_inputs))
+    #decoder_outputs, state_h, state_c = decoder_lstm(decoder_lstm1(decoder_inputs, initial_state = decoder_state_inputs))
+    decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state = decoder_state_inputs)
     #state_h = Concatenate()([state_h_f, state_h_b])
     #state_c = Concatenate()([state_c_f, state_c_b])
     decoder_states = [state_h, state_c]
@@ -185,7 +201,7 @@ def main():
         while not stop_condition:
             output_tokens, h, c = decoder_model.predict([target_seq] + states_value)
             
-            print(output_tokens)
+            #print(output_tokens)
             
             sampled_token_index = np.argmax(output_tokens[0, -1, :])
             sampled_char = reverse_char_index[sampled_token_index]
@@ -205,21 +221,27 @@ def main():
     for ind in range(int(len(input_words)*(1-2*validation_split)),int(len(input_words)*(1-validation_split))):
         input_seq = encoder_input_data[ind:ind+1]
         decoded_word =decode_word(input_seq)         
-        print("decoder target")
-        print(decoder_target_data[ind:ind+1,:,:])
+        #print("decoder target")
+        #print(decoder_target_data[ind:ind+1,:,:])
         print("{} -> {}".format(input_words[ind],decoded_word))    
     
-    #print("++ Validation set ++")
-    #for ind in range(int(len(input_words)*(1-validation_split)),len(input_words)):
-        #input_seq = encoder_input_data[ind:ind+1]
-        #decoded_word =decode_word(input_seq)                    
-        #print("{} -> {}".format(input_words[ind],decoded_word))
+    print("++ Validation set ++")
+    for ind in range(int(len(input_words)*(1-validation_split)),len(input_words)):
+        input_seq = encoder_input_data[ind:ind+1]
+        decoded_word =decode_word(input_seq)                    
+        print("{} -> {}".format(input_words[ind],decoded_word))
     
-    #print("++++++++ Test set +++++++++")
-    #for ind in range(len(test_words)):
-        #input_seq = encoder_input_data_test[ind:ind+1]
-        #decoded_word =decode_word(input_seq)                    
-        #print("{} -> {}".format(test_words[ind],decoded_word))
+    print("++++++++ Test set +++++++++")
+    for ind in range(len(test_words)):
+        input_seq = encoder_input_data_test[ind:ind+1]
+        decoded_word =decode_word(input_seq)                    
+        print("{} -> {}".format(test_words[ind],decoded_word))
+    
+    print("++++++++ Real test set +++++++++")
+    for ind in range(len(real_test_words)):
+        input_seq = encoder_input_data_real_test[ind:ind+1]
+        decoded_word =decode_word(input_seq)                    
+        print("{} -> {}".format(real_test_words[ind],decoded_word))
     
 if __name__ == '__main__':
     main()
