@@ -9,8 +9,8 @@ import pandas as pd
 
 #FILE_IN = '../data_professions/professions_train.csv'
 #FILE_OUT = '../data_professions/professions_train_agumented2.csv'
-FILE_IN = '../data_professions/professions_train_agumented3.csv'
-FILE_OUT = '../data_professions/professions_train_agumented3.csv'
+FILE_IN = '../data_professions/professions_train_agumented.csv'
+FILE_OUT = '../data_professions/professions_train_agumented.csv'
 
 list_con = ['ц', 'к', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ф', 'в', 'п', 'р', 'л', 'д', 'ж', 'ч', 'с', 'м', 'т', 'б']
 list_vow = ['у', 'е', 'ы', 'а', 'о', 'э', 'я', 'и', 'ю', 'ё']
@@ -69,7 +69,7 @@ def cut_first_sym(wordM, wordF):
     return wordM_, wordF_
 
 def main():
-    target_N = 10000
+    target_N = 20000
     min_len = 5
     clear_data = pd.read_csv(FILE_IN)
     
@@ -84,6 +84,10 @@ def main():
     while len(agumented_x) < target_N:
         np.random.seed( cnt )
         for wordM, wordF in zip(clear_x, clear_y):
+            if len(agumented_x) >= target_N:
+                super_break = True
+                break
+            
             res, wordM_t, wordF_t = change_con(wordM, wordF)
             if res:
                 if wordM_t not in agumented_x and wordF_t not in agumented_y:
@@ -98,6 +102,10 @@ def main():
                 #print("con {}".format(wordM_t))
                     
         for wordM, wordF in zip(clear_x, clear_y):
+            if len(agumented_x) >= target_N:
+                super_break = True
+                break
+            
             res, wordM_t, wordF_t = change_vow(wordM, wordF)
             if res:
                 if wordM_t not in agumented_x and wordF_t not in agumented_y:
@@ -111,6 +119,10 @@ def main():
             #else:
                 #print("vow {}".format(wordM_t))
         for wordM, wordF in zip(clear_x, clear_y):
+            if len(agumented_x) >= target_N:
+                super_break = True
+                break
+            
             if len(wordM) < min_len:
                 continue
             wordM_t, wordF_t = cut_first_sym(wordM, wordF)

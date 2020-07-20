@@ -31,7 +31,7 @@ def main():
     epochs = 100
     latent_dim = 512 #265 # units in LSTM
     validation_split = 0.01
-    data_train = pd.read_csv('../data_professions/professions_train_agumented3.csv')
+    data_train = pd.read_csv('../data_professions/professions_train_agumented.csv')
     data_test = pd.read_csv('../data_professions/professions_train.csv')
     data_real_test = pd.read_csv('../data_professions/professions_test.csv')
 
@@ -166,7 +166,7 @@ def main():
     plt.legend(['Train','Val'], loc='best')
     plt.pause(1)
     '''
-    #model.save('DeepFemenistic.h5')
+    model.save('../saved_model/DeepFemenistic.h5')
     
     # define sampling model
     encoder_model = Model(encoder_inputs, encoder_states)
