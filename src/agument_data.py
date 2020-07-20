@@ -7,15 +7,25 @@ Date created: 12.01.2020
 import numpy as np
 import pandas as pd
 
-FILE_IN = '../data_professions/professions_train.csv'
-FILE_OUT = '../data_professions/professions_train_agumented.csv'
+#FILE_IN = '../data_professions/professions_train.csv'
+#FILE_OUT = '../data_professions/professions_train_agumented2.csv'
+FILE_IN = '../data_professions/professions_train_agumented3.csv'
+FILE_OUT = '../data_professions/professions_train_agumented3.csv'
 
 list_con = ['ц', 'к', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ф', 'в', 'п', 'р', 'л', 'д', 'ж', 'ч', 'с', 'м', 'т', 'б']
 list_vow = ['у', 'е', 'ы', 'а', 'о', 'э', 'я', 'и', 'ю', 'ё']
 
+def find_max_aoi(wordM, wordF):
+    for i, (m, f) in enumerate(zip(list(wordM), list(wordF))):
+        if m != f:
+            return i
+    return i
 
 def change_con(wordM, wordF):
-    aoi = int(len(wordM)/2)
+    #aoi = int(len(wordM)/2)
+    aoi = find_max_aoi(wordM, wordF)
+    if aoi == 0:
+        return False, 0, None
     t_i = np.random.randint(0,aoi)
     t_l = wordM[t_i]
     if t_l != wordF[t_i]:
@@ -32,7 +42,10 @@ def change_con(wordM, wordF):
     return False, 3, None
 
 def change_vow(wordM, wordF):
-    aoi = int(len(wordM)/2)
+    #aoi = int(len(wordM)/2)
+    aoi = find_max_aoi(wordM, wordF)
+    if aoi == 0:
+        return False, 0, None
     t_i = np.random.randint(0,aoi)
     t_l = wordM[t_i]
     if t_l != wordF[t_i]:
@@ -56,7 +69,7 @@ def cut_first_sym(wordM, wordF):
     return wordM_, wordF_
 
 def main():
-    target_N = 7500
+    target_N = 10000
     min_len = 5
     clear_data = pd.read_csv(FILE_IN)
     
@@ -81,7 +94,7 @@ def main():
                     if( len(agumented_x) == target_N):
                         super_break = True
                         break
-            #else:
+            #else:O
                 #print("con {}".format(wordM_t))
                     
         for wordM, wordF in zip(clear_x, clear_y):

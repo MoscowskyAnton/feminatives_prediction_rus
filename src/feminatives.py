@@ -28,10 +28,10 @@ def get_chars(words, characters, add_startend = False):
 def main():
     num_samples = -1
     batch_size = 32
-    epochs = 50
+    epochs = 100
     latent_dim = 512 #265 # units in LSTM
     validation_split = 0.01
-    data_train = pd.read_csv('../data_professions/professions_train_agumented.csv')
+    data_train = pd.read_csv('../data_professions/professions_train_agumented3.csv')
     data_test = pd.read_csv('../data_professions/professions_train.csv')
     data_real_test = pd.read_csv('../data_professions/professions_test.csv')
 
