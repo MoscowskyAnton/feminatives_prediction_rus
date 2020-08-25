@@ -23,8 +23,8 @@ def find_max_aoi(wordM, wordF):
 
 def change_con(wordM, wordF):
     #aoi = int(len(wordM)/2)
-    aoi = find_max_aoi(wordM, wordF)
-    if aoi == 0:
+    aoi = find_max_aoi(wordM, wordF)-2
+    if aoi <= 0:
         return False, 0, None
     t_i = np.random.randint(0,aoi)
     t_l = wordM[t_i]
@@ -43,8 +43,8 @@ def change_con(wordM, wordF):
 
 def change_vow(wordM, wordF):
     #aoi = int(len(wordM)/2)
-    aoi = find_max_aoi(wordM, wordF)
-    if aoi == 0:
+    aoi = find_max_aoi(wordM, wordF)-2
+    if aoi <= 0:
         return False, 0, None
     t_i = np.random.randint(0,aoi)
     t_l = wordM[t_i]
@@ -69,7 +69,7 @@ def cut_first_sym(wordM, wordF):
     return wordM_, wordF_
 
 def main():
-    target_N = 20000
+    target_N = 10000
     min_len = 5
     clear_data = pd.read_csv(FILE_IN)
     
@@ -118,6 +118,7 @@ def main():
                         break
             #else:
                 #print("vow {}".format(wordM_t))
+        '''
         for wordM, wordF in zip(clear_x, clear_y):
             if len(agumented_x) >= target_N:
                 super_break = True
@@ -133,6 +134,7 @@ def main():
                 if( len(agumented_x) == target_N):
                     super_break = True
                     break
+        '''
                 
         if(super_break):
             break

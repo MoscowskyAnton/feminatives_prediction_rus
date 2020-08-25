@@ -28,8 +28,8 @@ def get_chars(words, characters, add_startend = False):
 def main():
     num_samples = -1
     batch_size = 32
-    epochs = 100
-    latent_dim = 512 #265 # units in LSTM
+    epochs = 150
+    latent_dim = 512 # 265 # units in LSTM
     validation_split = 0.01
     data_train = pd.read_csv('../data_professions/professions_train_agumented.csv')
     data_test = pd.read_csv('../data_professions/professions_train.csv')
@@ -106,12 +106,12 @@ def main():
     encoder_inputs = Input(shape=(None, num_tokens))    
     #encoder1 = Bidirectional(LSTM(latent_dim,return_sequences=True))
     #encoder = Bidirectional(LSTM(latent_dim, return_state=True))
-    encoder1 = LSTM(latent_dim,return_sequences=True)
-    encoder = LSTM(latent_dim, return_state=True)
+    #encoder1 = LSTM(latent_dim,return_sequences=True)
+    encoder = LSTM(latent_dim, return_state=True, dropout=0.25)
     #encoder_outputs, state_h_f, state_c_f, state_h_b, state_c_b = encoder(Dropout(0.25)(encoder1(encoder_inputs)))
     #encoder_outputs, state_h, state_c = encoder(Dropout(0.25)(encoder1(encoder_inputs)))
     #encoder_outputs, state_h, state_c = encoder(encoder1(encoder_inputs))
-    encoder_outputs, state_h, state_c = encoder(encoder_inputs)
+    encoder_outputs, state_h, state_c = (encoder(encoder_inputs))
     # discard output, leave state only
     #state_h = Concatenate()([state_h_f, state_h_b])
     #state_c = Concatenate()([state_c_f, state_c_b])
@@ -122,8 +122,8 @@ def main():
     
     #decoder_lstm1 = LSTM(latent_dim * 2, return_sequences=True, return_state=True)
     #decoder_lstm = LSTM(latent_dim * 2, return_sequences=True, return_state=True)
-    decoder_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=True)
-    decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True)
+    #decoder_lstm1 = LSTM(latent_dim, return_sequences=True, return_state=True)
+    decoder_lstm = LSTM(latent_dim, return_sequences=True, return_state=True, dropout=0.25)
     #decoder_outputs, _, _ = decoder_lstm(decoder_lstm1(decoder_inputs, initial_state=encoder_states))
     decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
     decoder_dense = Dense(num_tokens, activation='softmax')
@@ -136,37 +136,7 @@ def main():
     acc = str('categorical_accuracy')
     plot_losses = TrainingPlot(acc)
     
-    # Train!
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=[acc])
-    history = model.fit([encoder_input_data, decoder_input_data],
-              decoder_target_data, 
-              batch_size=batch_size,
-              epochs=epochs,
-              shuffle = True,
-              validation_split=validation_split,
-              callbacks = [plot_losses])
-    
-    print(history.history.keys())
-    '''
-    plt.figure(0)
-    plt.plot(history.history['accuracy'])
-    plt.plot(history.history['val_accuracy'])
-    plt.title('Model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train','Val'], loc='best')
-    plt.pause(1)
-    
-    plt.figure(1)
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train','Val'], loc='best')
-    plt.pause(1)
-    '''
-    model.save('../saved_model/DeepFemenistic.h5')
+    #
     
     # define sampling model
     encoder_model = Model(encoder_inputs, encoder_states)
@@ -215,8 +185,60 @@ def main():
             
             states_value = [h, c]
         
-        return decoded_word
+        return decoded_word                    
     
+    # Train!
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=[acc])
+    
+    input_seq = encoder_input_data_real_test[0:1]
+    
+    '''
+    for i in range(epochs):
+        history = model.fit([encoder_input_data, decoder_input_data],
+              decoder_target_data, 
+              batch_size=batch_size,
+              epochs=1,
+              shuffle = True,
+              validation_split=validation_split,
+              callbacks = [plot_losses])
+                
+        decoded_word =decode_word(input_seq)                    
+        print("{}: {} -> {}".format(i, real_test_words[0],decoded_word))
+    '''   
+    history = model.fit([encoder_input_data, decoder_input_data],
+              decoder_target_data, 
+              batch_size=batch_size,
+              epochs=epochs,
+              shuffle = True,
+              validation_split=validation_split,
+              callbacks = [plot_losses])
+    
+    
+    #print(history.history.keys())
+    '''
+    plt.figure(0)
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train','Val'], loc='best')
+    plt.pause(1)
+    
+    plt.figure(1)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train','Val'], loc='best')
+    plt.pause(1)
+    '''
+    model.save('../saved_model/DeepFemenistic.h5')
+    
+    
+    
+    '''
     print("++ Part of train set ++")
     for ind in range(int(len(input_words)*(1-2*validation_split)),int(len(input_words)*(1-validation_split))):
         input_seq = encoder_input_data[ind:ind+1]
@@ -230,6 +252,8 @@ def main():
         input_seq = encoder_input_data[ind:ind+1]
         decoded_word =decode_word(input_seq)                    
         print("{} -> {}".format(input_words[ind],decoded_word))
+    '''
+    
     
     print("++++++++ Test set +++++++++")
     for ind in range(len(test_words)):
@@ -242,6 +266,8 @@ def main():
         input_seq = encoder_input_data_real_test[ind:ind+1]
         decoded_word =decode_word(input_seq)                    
         print("{} -> {}".format(real_test_words[ind],decoded_word))
+        
+    
     
 if __name__ == '__main__':
     main()
